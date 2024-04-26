@@ -21,13 +21,13 @@ class UserServiceTest {
     @Test
     void testAdd() {
         User user = new User();
-        user.setUsername("zh");
-        user.setUserAccount("123");
+        user.setUsername("LXINN");
+        user.setUserAccount("LXINN");
         user.setAvatarUrl("https://img.touxiangwu.com/uploads/allimg/2022053117/ivhiashhpu1.jpg");
         user.setGender(0);
-        user.setUserPassword("12345678");
-        user.setPhone("123456789");
-        user.setEmail("111111111");
+        user.setUserPassword("Jay257248");
+        user.setPhone("13984321671");
+        user.setEmail("111111111@lx.com");
         boolean result = userService.save(user);
         System.out.println(user.getId());
         Assertions.assertTrue(result);
@@ -35,38 +35,37 @@ class UserServiceTest {
 
     @Test
     void userRegister() {
-        // 密码不一致
+        // 1.密码不一致
         String userAccount = "LXINN";
         String userPassword = "";
         String checkPassword = "Jay257248";
         long result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 账号小于4位
+        // 2.账号小于4位
         userAccount = "LX";
         userPassword = "Jay257248";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 密码小于8位
+        // 3.密码小于8位
         userAccount = "LXINN";
         userPassword = "Jay257";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 特殊字符
+        // 4.特殊字符
         userAccount = "LX INN";
         userPassword = "Jay257248";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 密码和校验密码不同
-        userAccount = "LXINN";
+        // 5.密码和校验密码不同
         checkPassword = "Jay257248000";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 账号已存在
-        userAccount = "test";
-        userPassword = "12345678";
+        // 6.账号已存在
+        userAccount = "LXINN";
+        userPassword = "Jay257248";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
         Assertions.assertEquals(-1, result);
-        // 注册成功
+        // 7.注册成功
         userAccount = "LXINN";
         userPassword = "Jay257248";
         result = userService.userRegister(userAccount, userPassword, checkPassword);
