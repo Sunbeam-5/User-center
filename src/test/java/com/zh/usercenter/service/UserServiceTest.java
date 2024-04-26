@@ -33,4 +33,43 @@ class UserServiceTest {
         Assertions.assertTrue(result);
     }
 
+    @Test
+    void userRegister() {
+        // 密码不一致
+        String userAccount = "LXINN";
+        String userPassword = "";
+        String checkPassword = "Jay257248";
+        long result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 账号小于4位
+        userAccount = "LX";
+        userPassword = "Jay257248";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 密码小于8位
+        userAccount = "LXINN";
+        userPassword = "Jay257";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 特殊字符
+        userAccount = "LX INN";
+        userPassword = "Jay257248";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 密码和校验密码不同
+        userAccount = "LXINN";
+        checkPassword = "Jay257248000";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 账号已存在
+        userAccount = "test";
+        userPassword = "12345678";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+        // 注册成功
+        userAccount = "LXINN";
+        userPassword = "Jay257248";
+        result = userService.userRegister(userAccount, userPassword, checkPassword);
+        Assertions.assertEquals(-1, result);
+    }
 }

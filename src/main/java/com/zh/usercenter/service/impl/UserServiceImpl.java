@@ -45,12 +45,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return -1;
         }
         // 账户不能包含特殊字符
-        //String validPattern = "^[a-zA-Z0-9]+$";
-        String validPattern = "\\pP|\\pS|\\s+";
+//        //String validPattern = "^[a-zA-Z0-9]+$";
+//        String validPattern = "\\pP|\\pS|\\s+";
+//        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+//        if (!matcher.find()){
+//            return -1;
+//        }
+        String validPattern = "^[\\p{Alnum}]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
         if (!matcher.find()){
             return -1;
         }
+
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("userAccount", userAccount);
