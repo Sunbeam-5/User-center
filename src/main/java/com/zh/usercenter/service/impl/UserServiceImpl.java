@@ -5,11 +5,14 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.zh.usercenter.model.domain.User;
 import com.zh.usercenter.service.UserService;
 import com.zh.usercenter.mapper.UserMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,11 +25,17 @@ import java.util.regex.Pattern;
 */
 
 @Service
+@Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService {
 
     @Resource
     private UserMapper userMapper;
+
+    /**
+     * 盐值，混淆密码
+     */
+    private static final  String SALT = "thelittleprince";
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -58,7 +67,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             return -1;
         }
 
-
         // 账户不能重复
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
@@ -72,7 +80,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 2.加密 MD5 加盐等
-        final String SALT = "thelittleprince";
         String encryptedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes(StandardCharsets.UTF_8));
 
         // 3.插入数据
@@ -85,8 +92,44 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
         return user.getId(); // 如果返回null会出现拆箱错误（Long和long），所以添加判断
     }
-}
 
+    @Override
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
+        // 1.校验
+
+        // 改用commons-lang3
+        if (StringUtils.isAnyBlank(userAccount, userPassword)){
+            return null;
+        }
+        if (userAccount.length() < 4){
+            return null;
+        }
+        if (userPassword.length() < 8){
+            return null;
+        }
+        // 账户不能包含特殊字符
+        String validPattern = "^[\\p{Alnum}]+$";
+        Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
+        if (!matcher.find()){
+            return null;
+        }
+
+        // 2.加密 MD5 加盐等
+        String encryptedPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes(StandardCharsets.UTF_8));
+        // 查询用户是否存在
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_account", userAccount);
+        queryWrapper.eq("user_password", encryptedPassword);
+        User user = userMapper.selectOne(queryWrapper);
+        // 用户不存在
+        if (user == null){
+            log.info("user login failed, account can not match password");
+            return null;
+        }
+        // 3.记录用户登录状态
+        return user;
+    }
+}
 
 
 

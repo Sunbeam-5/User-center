@@ -6,3 +6,10 @@ spring:
     url: jdbc:mysql://localhost:3306/universe
     username: root
     password: 123456
+server:
+  port: 8080
+# Mybatis Config
+mybatis:
+  configuration:
+    # 开启驼峰命名转换
+    map-underscore-to-camel-case: true
