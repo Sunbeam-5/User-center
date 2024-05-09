@@ -18,16 +18,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
-* @author 19855
-* @description 针对表【user(用户)】的数据库操作Service实现
-* @createDate 2024-04-25 16:11:36
+ * @author 19855
+ * @description 针对表【user(用户)】的数据库操作Service实现
+ * @createDate 2024-04-25 16:11:36
  * 用户服务实现类
-*/
+ */
 
 @Service
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
-    implements UserService {
+        implements UserService {
 
     @Resource
     private UserMapper userMapper;
@@ -35,7 +35,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 盐值，混淆密码
      */
-    private static final  String SALT = "thelittleprince";
+    private static final String SALT = "thelittleprince";
+
+    /**
+     * 用户登录态标识
+     */
+    public static final String USER_LOGIN_STATE = "userLoginState";
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -45,13 +50,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //        }
 
         // 改用commons-lang3
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)){
+        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
+            // TODO: 2024/5/9 修改为自定义异常 
             return -1;
         }
-        if (userAccount.length() < 4){
+        if (userAccount.length() < 4) {
             return -1;
         }
-        if (userPassword.length() < 8 || checkPassword.length() < 8){
+        if (userPassword.length() < 8 || checkPassword.length() < 8) {
             return -1;
         }
         // 账户不能包含特殊字符
@@ -63,7 +69,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 //        }
         String validPattern = "^[\\p{Alnum}]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (!matcher.find()){
+        if (!matcher.find()) {
             return -1;
         }
 
@@ -71,11 +77,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
         queryWrapper.eq("user_account", userAccount);
         long count = userMapper.selectCount(queryWrapper);
-        if (count > 0){
+        if (count > 0) {
             return -1;
         }
         // 密码和校验密码相同
-        if (!userPassword.equals(checkPassword)){
+        if (!userPassword.equals(checkPassword)) {
             return -1;
         }
 
@@ -87,7 +93,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         user.setUserAccount(userAccount);
         user.setUserPassword(encryptedPassword);
         boolean saveResult = this.save(user);
-        if (!saveResult){
+        if (!saveResult) {
             return -1;
         }
         return user.getId(); // 如果返回null会出现拆箱错误（Long和long），所以添加判断
@@ -98,19 +104,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         // 1.校验
 
         // 改用commons-lang3
-        if (StringUtils.isAnyBlank(userAccount, userPassword)){
+        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             return null;
         }
-        if (userAccount.length() < 4){
+        if (userAccount.length() < 4) {
             return null;
         }
-        if (userPassword.length() < 8){
+        if (userPassword.length() < 8) {
             return null;
         }
         // 账户不能包含特殊字符
         String validPattern = "^[\\p{Alnum}]+$";
         Matcher matcher = Pattern.compile(validPattern).matcher(userAccount);
-        if (!matcher.find()){
+        if (!matcher.find()) {
             return null;
         }
 
@@ -122,12 +128,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.eq("user_password", encryptedPassword);
         User user = userMapper.selectOne(queryWrapper);
         // 用户不存在
-        if (user == null){
+        if (user == null) {
             log.info("user login failed, account can not match password");
             return null;
         }
-        // 3.记录用户登录状态
-        return user;
+
+        // 3.用户脱敏
+        User safetyUser = new User();
+        safetyUser.setId(user.getId());
+        safetyUser.setUsername(user.getUsername());
+        safetyUser.setUserAccount(user.getUserAccount());
+        safetyUser.setAvatarUrl(user.getAvatarUrl());
+        safetyUser.setGender(user.getGender());
+        safetyUser.setPhone(user.getPhone());
+        safetyUser.setEmail(user.getEmail());
+        safetyUser.setCreateTime(user.getCreateTime());
+        safetyUser.setUpdateTime(user.getUpdateTime());
+
+        // 4.记录用户登录状态
+        request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
+
+
+        return safetyUser;
     }
 }
 
