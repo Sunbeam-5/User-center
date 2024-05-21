@@ -12,10 +12,11 @@ import org.springframework.util.DigestUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import static com.zh.usercenter.contant.UserContant.USER_LOGIN_STATE;
 
 /**
  * @author 19855
@@ -37,10 +38,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
      */
     private static final String SALT = "thelittleprince";
 
-    /**
-     * 用户登录态标识
-     */
-    public static final String USER_LOGIN_STATE = "userLoginState";
+
 
     @Override
     public long userRegister(String userAccount, String userPassword, String checkPassword) {
@@ -100,7 +98,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     @Override
-    public User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response) {
+    public User userLogin(String userAccount, String userPassword, HttpServletRequest request) {
         // 1.校验
 
         // 改用commons-lang3
@@ -134,21 +132,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         }
 
         // 3.用户脱敏
-        User safetyUser = new User();
-        safetyUser.setId(user.getId());
-        safetyUser.setUsername(user.getUsername());
-        safetyUser.setUserAccount(user.getUserAccount());
-        safetyUser.setAvatarUrl(user.getAvatarUrl());
-        safetyUser.setGender(user.getGender());
-        safetyUser.setPhone(user.getPhone());
-        safetyUser.setEmail(user.getEmail());
-        safetyUser.setCreateTime(user.getCreateTime());
-        safetyUser.setUpdateTime(user.getUpdateTime());
+        User safetyUser = getSafetyUser(user);
 
         // 4.记录用户登录状态
         request.getSession().setAttribute(USER_LOGIN_STATE, safetyUser);
+        return safetyUser;
 
 
+        }
+    /**
+     * 脱敏
+     */
+    @Override
+    public User getSafetyUser(User originUser) {
+        User safetyUser = new User();
+        safetyUser.setId(originUser.getId());
+        safetyUser.setUsername(originUser.getUsername());
+        safetyUser.setUserAccount(originUser.getUserAccount());
+        safetyUser.setAvatarUrl(originUser.getAvatarUrl());
+        safetyUser.setGender(originUser.getGender());
+        safetyUser.setPhone(originUser.getPhone());
+        safetyUser.setEmail(originUser.getEmail());
+        safetyUser.setUserRole(originUser.getUserRole());
+        safetyUser.setCreateTime(originUser.getCreateTime());
+        safetyUser.setUpdateTime(originUser.getUpdateTime());
         return safetyUser;
     }
 }

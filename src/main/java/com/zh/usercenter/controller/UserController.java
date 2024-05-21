@@ -1,19 +1,22 @@
 package com.zh.usercenter.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.zh.usercenter.model.domain.User;
-import com.zh.usercenter.model.request.UserLoginRequest;
-import com.zh.usercenter.model.request.UserRegisterRequest;
+import com.zh.usercenter.model.domain.request.UserLoginRequest;
+import com.zh.usercenter.model.domain.request.UserRegisterRequest;
 import com.zh.usercenter.service.UserService;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import static com.zh.usercenter.contant.UserContant.ADMIN_ROLE;
+import static com.zh.usercenter.contant.UserContant.USER_LOGIN_STATE;
 
 /**
  * 用户接口
@@ -49,6 +52,55 @@ public class UserController {
         if (StringUtils.isAnyBlank(userAccount, userPassword)) {
             return null;
         }
-        return userService.userLogin(userAccount,userPassword,request,null);
+        return userService.userLogin(userAccount,userPassword,request);
+    }
+
+//    @PostMapping("/logout")
+//    public boolean userLogout(HttpServletRequest request) {
+//        // return userService.userLogout(request);
+//    }
+
+    @GetMapping("/search")
+    public List<User> searchUser(String userName, HttpServletRequest request) {
+        // return userService.searchUser(userName);
+        // 仅管理员可查询
+//        if (!userService.isAdmin(request)) {
+//            return null;
+//        }
+       if (isAdmin(request)) {
+           return new ArrayList<>();
+       }
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        if (StringUtils.isNotBlank(userName)) {
+            queryWrapper.like("username", userName);
+        }
+        List<User> userList = userService.list(queryWrapper);
+        return userList.stream()
+                .map(user -> userService.getSafetyUser(user)
+                ).collect(Collectors.toList());
+    }
+
+    @PostMapping("/delete")
+    public boolean deleteUser(@RequestBody long id, HttpServletRequest request) {
+        if (!isAdmin(request)) {
+            return false;
+        }
+        if (id <= 0) {
+            return false;
+        }
+        // return userService.deleteUser(id);
+        return userService.removeById(id);
+    }
+
+    /**
+     * 是否为管理员
+     *
+     * @param request
+     * @return
+     */
+    private boolean isAdmin(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User user = (User) userObj;
+        return user != null && user.getUserRole() == ADMIN_ROLE;
     }
 }

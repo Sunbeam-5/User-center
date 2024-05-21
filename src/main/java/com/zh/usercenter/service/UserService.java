@@ -13,6 +13,7 @@ import javax.servlet.http.HttpServletResponse;
  * 用户服务接口
 */
 public interface UserService extends IService<User> {
+
     /**
      * 用户注册
      * @param userAccount 用户账户
@@ -27,8 +28,14 @@ public interface UserService extends IService<User> {
      * @param userAccount 用户账户
      * @param userPassword 用户密码
      * @param request 请求
-     * @param response 响应
      * @return 脱敏后的用户信息
      */
-    User userLogin(String userAccount, String userPassword, HttpServletRequest request, HttpServletResponse response);
+    User userLogin(String userAccount, String userPassword, HttpServletRequest request);
+
+    /**
+     * 用户脱敏
+     * @param originUser 原始用户信息
+     * @return 脱敏后的用户信息
+     */
+    User getSafetyUser(User originUser);
 }
