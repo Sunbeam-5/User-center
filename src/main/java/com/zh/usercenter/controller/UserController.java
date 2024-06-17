@@ -60,6 +60,23 @@ public class UserController {
 //        // return userService.userLogout(request);
 //    }
 
+
+    // 查询当前登录用户
+    @GetMapping("/current")
+    public User getCurrentUser(HttpServletRequest request) {
+        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
+        User currentUser = (User) userObj;
+        if (currentUser == null) {
+            return null;
+        }
+        Long userId = currentUser.getId();
+        // todo: 校验用户状态是否异常
+        User user = userService.getById(userId);
+        return userService.getSafetyUser(user);
+    }
+
+
+    // 管理员查询
     @GetMapping("/search")
     public List<User> searchUser(String userName, HttpServletRequest request) {
         // return userService.searchUser(userName);
